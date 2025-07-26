@@ -43,44 +43,52 @@ resource "aws_ecs_cluster" "this" {
   name = "${var.prefix}-cluster"
 }
 
-resource "aws_ecs_task_definition" "upload" {
-  family                   = "${var.prefix}-upload-task"
-  network_mode             = "awsvpc"
+resource "aws_ecs_task_definition" "queue" {
+  family = "${var.prefix}-queue-task"
+  network_mode = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.task_exec.arn
-  container_definitions    = jsonencode([{
-    name      = "upload"
-    image     = "${aws_ecr_repository.upload.repository_url}:${var.image_tag}"
+  cpu                   = "256"
+  memory                = "512"
+  execution_role_arn    = aws_iam_role.task_exec.arn
+
+  container_definitions = jsonencode([{
+    name      = "queue"
+    image     = "${aws_ecr_repository.queue.repository_url}:${var.image_tag}"
     essential = true
-    portMappings = [{containerPort=5000,hostPort=5000}]
-    environment = [
-      {name="BUCKET", value=aws_s3_bucket.upload_bucket.bucket},
-    ]
+    portMappings = [{
+      containerPort = 5001
+      hostPort      = 5001
+    }]
+    environment = [{
+      name  = "QUEUE_URL"
+      value = aws_sqs_queue.message_queue.id
+    }]
     logConfiguration = {
       logDriver = "awslogs"
       options = {
-        "awslogs-group" = "/ecs/${var.prefix}-upload"
-        "awslogs-region" = var.aws_region
+        "awslogs-group"         = "/ecs/${var.prefix}-queue"
+        "awslogs-region"        = var.aws_region
         "awslogs-stream-prefix" = "ecs"
       }
     }
   }])
 }
 
-resource "aws_ecs_service" "upload" {
-  name            = "${var.prefix}-upload-service"
+
+resource "aws_ecs_service" "queue" {
+  name            = "${var.prefix}-queue-service"
   cluster         = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.upload.arn
+  task_definition = aws_ecs_task_definition.queue.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
   network_configuration {
     subnets          = data.aws_subnets.default.ids
     security_groups  = []
     assign_public_ip = true
   }
 }
+
 
 # Repeat task_definition and service for queue...
 resource "aws_ecs_task_definition" "queue" {
@@ -92,7 +100,14 @@ resource "aws_ecs_task_definition" "queue" {
   execution_role_arn    = aws_iam_role.task_exec.arn
 
   container_definitions = jsonencode([{
-    name="queue"; image="${aws_ecr_repository.queue.repository_url}:${var.image_tag}"
+    container_definitions = jsonencode([
+  {
+    name  = "queue",
+    image = "${aws_ecr_repository.queue.repository_url}:${var.image_tag}"
+    # other properties like portMappings, environment, etc.
+  }
+])
+
     essential=true; portMappings=[{containerPort=5001,hostPort=5001}]
     environment=[{name="QUEUE_URL", value=aws_sqs_queue.message_queue.id}]
     logConfiguration={
