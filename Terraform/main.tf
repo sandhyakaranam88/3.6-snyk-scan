@@ -32,11 +32,11 @@ data "aws_availability_zones" "available" {}
 ######################
 
 resource "aws_ecr_repository" "upload" {
-  name = "sandhyak-s3"
+  name = "${var.prefix}-s3"
 }
 
 resource "aws_ecr_repository" "queue" {
-  name = "sandhyak-queue"
+  name = "${var.prefix}-sqs"
 }
 
 resource "aws_s3_bucket" "upload_bucket" {
