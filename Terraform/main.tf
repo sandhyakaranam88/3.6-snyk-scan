@@ -2,17 +2,34 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Fetch default VPC and its subnets
-data "aws_vpc" "default" {
-  default = true
-}
+########################
+# Networking Resources #
+########################
 
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "${var.prefix}-vpc"
   }
 }
+
+resource "aws_subnet" "main" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "${var.prefix}-subnet"
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+######################
+# Application Infra  #
+######################
 
 resource "aws_ecr_repository" "upload" {
   name = "sandhyak-s3"
@@ -72,6 +89,7 @@ resource "aws_ecs_cluster" "this" {
   name = "${var.prefix}-cluster"
 }
 
+# Upload Task Definition
 resource "aws_ecs_task_definition" "upload" {
   family                   = "${var.prefix}-upload-task"
   network_mode             = "awsvpc"
@@ -111,12 +129,13 @@ resource "aws_ecs_service" "upload" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = data.aws_subnets.default.ids
+    subnets          = [aws_subnet.main.id]
     security_groups  = []
     assign_public_ip = true
   }
 }
 
+# Queue Task Definition
 resource "aws_ecs_task_definition" "queue" {
   family                   = "${var.prefix}-queue-task"
   network_mode             = "awsvpc"
@@ -156,7 +175,7 @@ resource "aws_ecs_service" "queue" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = data.aws_subnets.default.ids
+    subnets          = [aws_subnet.main.id]
     security_groups  = []
     assign_public_ip = true
   }
