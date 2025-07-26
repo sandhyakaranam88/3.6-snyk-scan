@@ -21,31 +21,7 @@ jobs:
       - name: Log into ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Create ECR repo service-upload if not exists
-        run: |
-          aws ecr describe-repositories --repository-names service-upload || \
-          aws ecr create-repository --repository-name service-upload
-
-      - name: Create ECR repo service-queue if not exists
-        run: |
-          aws ecr describe-repositories --repository-names service-queue || \
-          aws ecr create-repository --repository-name service-queue
-
-      - name: Build and Push upload image
-        working-directory: services/service-upload
-        run: |
-          docker build -t upload:latest .
-          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/service-upload:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/service-upload:latest
-
-      - name: Build and Push queue image
-        working-directory: services/service-queue
-        run: |
-          docker build -t queue:latest .
-          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/service-queue:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/service-queue:latest
-
+    
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -56,6 +32,20 @@ jobs:
         run: |
           terraform init
           terraform apply -auto-approve -var="image_tag=latest"
+
+      - name: Build and Push upload image
+        working-directory: services/sandhyak-upload
+        run: |
+          docker build -t upload:latest .
+          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/sandhyak-upload:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/sandhyak-upload:latest
+
+      - name: Build and Push queue image
+        working-directory: services/sandhyak-queue
+        run: |
+          docker build -t queue:latest .
+          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/sandhyak-queue:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/sandhyak-queue:latest
 
   snyk:
     needs: build
@@ -69,14 +59,14 @@ jobs:
           chmod +x snyk
           sudo mv snyk /usr/local/bin/
 
-      - name: Snyk test service-upload
-        working-directory: services/service-upload
+      - name: Snyk test sandhyak-upload
+        working-directory: services/sandhyak-upload
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test
 
-      - name: Snyk test service-queue
-        working-directory: services/service-queue
+      - name: Snyk test sandhyak-queue
+        working-directory: services/sandhyak-queue
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test
