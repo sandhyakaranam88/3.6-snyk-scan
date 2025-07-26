@@ -37,15 +37,15 @@ jobs:
         working-directory: services/service-upload
         run: |
           docker build -t upload:latest .
-          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya-upload:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya-upload:latest
+          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya2-upload:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya2-upload:latest
 
       - name: Build and Push queue image
         working-directory: services/service-queue
         run: |
           docker build -t queue:latest .
-          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya-queue:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya-queue:latest
+          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya2-queue:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya2-queue:latest
 
   snyk:
     needs: build
