@@ -1,3 +1,3 @@
 variable "aws_region" { default = "ap-southeast-1" }
-variable "prefix"     { default = "ksandhya3" }
+variable "prefix"     { default = "ks1" }
 variable "image_tag"  {}
