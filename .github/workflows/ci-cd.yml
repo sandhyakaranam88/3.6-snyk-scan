@@ -37,15 +37,15 @@ jobs:
         working-directory: services/service-upload
         run: |
           docker build -t upload:latest .
-          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/sandhyak-upload:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/sandhyak-upload:latest
+          docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya-upload:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya-upload:latest
 
       - name: Build and Push queue image
         working-directory: services/service-queue
         run: |
           docker build -t queue:latest .
-          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/sandhyak-queue:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/sandhyak-queue:latest
+          docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya-queue:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya-queue:latest
 
   snyk:
     needs: build
@@ -59,14 +59,14 @@ jobs:
           chmod +x snyk
           sudo mv snyk /usr/local/bin/
 
-      - name: Snyk test sandhyak-upload
-        working-directory: services/sandhyak-upload
+      - name: Snyk test service-upload
+        working-directory: services/service-upload
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test
 
       - name: Snyk test sandhyak-queue
-        working-directory: services/sandhyak-queue
+        working-directory: services/service-queue
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test
