@@ -1,4 +1,4 @@
-name: CI/CD
+buildname: CI/CD
 
 on:
   push:
@@ -38,14 +38,14 @@ jobs:
         run: |
           docker build -t upload:latest .
           docker tag upload:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya3-s3:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya3-upload:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya3-s3:latest
 
       - name: Build and Push queue image
         working-directory: services/service-queue
         run: |
           docker build -t queue:latest .
           docker tag queue:latest ${{ steps.login-ecr.outputs.registry }}/ksandhya3-sqs:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya3-queue:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/ksandhya3-sqs:latest
 
   snyk:
     needs: build
