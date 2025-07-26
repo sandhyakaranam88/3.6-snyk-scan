@@ -2,6 +2,18 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Fetch default VPC and its subnets
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
 resource "aws_ecr_repository" "upload" {
   name = "sandhyak-s3"
 }
@@ -11,8 +23,8 @@ resource "aws_ecr_repository" "queue" {
 }
 
 resource "aws_s3_bucket" "upload_bucket" {
-  bucket         = "${var.prefix}-upload-bucket"
-  force_destroy  = true
+  bucket        = "${var.prefix}-upload-bucket"
+  force_destroy = true
 }
 
 resource "aws_sqs_queue" "message_queue" {
@@ -60,7 +72,6 @@ resource "aws_ecs_cluster" "this" {
   name = "${var.prefix}-cluster"
 }
 
-# Upload Task Definition
 resource "aws_ecs_task_definition" "upload" {
   family                   = "${var.prefix}-upload-task"
   network_mode             = "awsvpc"
@@ -106,7 +117,6 @@ resource "aws_ecs_service" "upload" {
   }
 }
 
-# Queue Task Definition
 resource "aws_ecs_task_definition" "queue" {
   family                   = "${var.prefix}-queue-task"
   network_mode             = "awsvpc"
@@ -149,12 +159,5 @@ resource "aws_ecs_service" "queue" {
     subnets          = data.aws_subnets.default.ids
     security_groups  = []
     assign_public_ip = true
-  }
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "default-for-az"
-    values = ["true"]
   }
 }
