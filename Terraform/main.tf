@@ -3,11 +3,11 @@ provider "aws" {
 }
 
 resource "aws_ecr_repository" "upload" {
-  name = "service-upload"
+  name = "sandhya-s3"
 }
 
 resource "aws_ecr_repository" "queue" {
-  name = "service-queue"
+  name = "sandhya-queue"
 }
 
 resource "aws_s3_bucket" "upload_bucket" {
