@@ -57,12 +57,12 @@ jobs:
           terraform init
           terraform apply -auto-approve -var="image_tag=latest"
 
+     - name: Terraform Init & Apply
+      working-directory: Terraform
+      run: |
+    terraform init
+    terraform apply -auto-approve -var="image_tag=latest"
 
-      - name: Terraform Init & Apply
-        working-directory: Terraform
-        run: |
-          terraform init
-          terraform apply -auto-approve -var="image_tag=latest"
 
   snyk:
     needs: build
