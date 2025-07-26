@@ -49,30 +49,26 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.6  # specify your desired version here
+          terraform_version: 1.5.6
 
       - name: Terraform Init & Apply
-        working-directory: terraform
+        working-directory: Terraform  # Use the correct case here
         run: |
           terraform init
           terraform apply -auto-approve -var="image_tag=latest"
-
-     - name: Terraform Init & Apply
-      working-directory: Terraform
-      run: |
-    terraform init
-    terraform apply -auto-approve -var="image_tag=latest"
-
 
   snyk:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Snyk
         run: |
           curl -Lo snyk https://static.snyk.io/cli/latest/snyk-linux
-          chmod +x snyk; sudo mv snyk /usr/local/bin/
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/
+
       - name: Snyk test service-upload
         working-directory: services/service-upload
         env:
