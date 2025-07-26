@@ -20,6 +20,17 @@ jobs:
       - name: Log into ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Create ECR repo service-upload if not exists
+    run: |
+    aws ecr describe-repositories --repository-names service-upload || \
+    aws ecr create-repository --repository-name service-upload
+
+- name: Create ECR repo service-queue if not exists
+  run: |
+    aws ecr describe-repositories --repository-names service-queue || \
+    aws ecr create-repository --repository-name service-queue
+
       
       - name: Build and Push upload image
         working-directory: services/service-upload
